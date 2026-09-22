@@ -44,6 +44,19 @@ HEADERS = {
     "User-Agent": "mtl-classic-personal-project/0.1 (personal-use concert finder; contact: <your email>)"
 }
 
+# Keywords that indicate a free outdoor/community concert rather than a
+# regular ticketed Maison symphonique concert. OSM's own concert pages don't
+# expose the actual ticket price range in static HTML (it's injected by a JS
+# ticketing widget), so we classify free-vs-paid from the title instead of
+# scraping a dollar figure. Exact pricing, when it matters, is one click away
+# via the `link` field.
+FREE_KEYWORDS = [
+    "in the parks",
+    "classical spree",
+    "virée classique",
+    "journées de la culture",  # OSM's free Culture Days programming
+]
+
 DATE_PATTERN = re.compile(
     r"(?P<dow>Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+"
     r"(?P<mon>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+"
@@ -114,6 +127,16 @@ def _parse_date(match: re.Match) -> tuple[str | None, str | None]:
     return date_str, start_time
 
 
+def classify_price(title: str) -> str:
+    """Free vs. paid, based on title keywords (see FREE_KEYWORDS above).
+    Everything at Maison symphonique that isn't explicitly one of OSM's
+    outdoor/community series is a regular ticketed concert."""
+    lowered = title.lower()
+    if any(keyword in lowered for keyword in FREE_KEYWORDS):
+        return "free"
+    return "paid"
+
+
 def fetch_osm_events() -> list[dict]:
     """Return a list of normalized event dicts (matching the shared Event
     schema, minus id/first_seen/last_updated which the runner fills in)."""
@@ -168,8 +191,8 @@ def fetch_osm_events() -> list[dict]:
             "date": date_str,
             "start_time": start_time,
             "end_time": None,
-            "price_type": "unknown",  # not shown on the list page; would need the detail page
-            "price_amount": None,
+            "price_type": classify_price(title),
+            "price_amount": None,  # exact price is JS-rendered on OSM's site; see `link`
             "category": "orchestra",
             "source": SOURCE_NAME,
             "link": link,
