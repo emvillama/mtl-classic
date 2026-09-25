@@ -1,122 +1,145 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+const API_URL = "http://localhost:8000/api/events";
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+const TIER_LABELS = {
+  scheduled: "Scheduled",
+  busking_spot: "Busking spot",
+  open_rehearsal: "Open rehearsal",
+};
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function formatDate(event) {
+  if (!event.date) return "No schedule — drop by";
+  const date = new Date(`${event.date}T${event.start_time ?? "00:00:00"}`);
+  const dateStr = date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  if (!event.start_time) return dateStr;
+  const timeStr = date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${dateStr} — ${timeStr}`;
 }
 
-export default App
+function EventCard({ event }) {
+  return (
+    <div className={`event-card tier-${event.tier}`}>
+      <div className="event-card-header">
+        <span className={`tier-badge tier-badge-${event.tier}`}>
+          {TIER_LABELS[event.tier] ?? event.tier}
+        </span>
+        <span className={`price-badge price-badge-${event.price_type}`}>
+          {event.price_type === "free"
+            ? "Free"
+            : event.price_type === "paid"
+            ? event.price_amount
+              ? `Paid — ${event.price_amount}`
+              : "Paid"
+            : "Price unknown"}
+        </span>
+      </div>
+      <h3 className="event-title">{event.title}</h3>
+      <div className="event-meta">{formatDate(event)}</div>
+      <div className="event-venue">
+        {event.venue_name}
+        {event.address ? ` · ${event.address}` : ""}
+      </div>
+      {event.description && (
+        <p className="event-description">{event.description}</p>
+      )}
+      {event.link && (
+        <a
+          className="event-link"
+          href={event.link}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          More info →
+        </a>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [tierFilter, setTierFilter] = useState("all");
+
+  useEffect(() => {
+    fetch(API_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        setEvents(data.events ?? []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  const filtered =
+    tierFilter === "all" ? events : events.filter((e) => e.tier === tierFilter);
+
+  // Scheduled events sorted by date; busking spots (no date) trail at the end.
+  const sorted = [...filtered].sort((a, b) => {
+    if (!a.date && !b.date) return a.title.localeCompare(b.title);
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return `${a.date}${a.start_time ?? ""}`.localeCompare(
+      `${b.date}${b.start_time ?? ""}`
+    );
+  });
+
+  return (
+    <div className="app">
+      <header className="app-header">
+        <h1>Montreal Classical Concert Finder</h1>
+        <p className="subtitle">
+          Scheduled concerts, free recitals, and known busking spots — all in
+          one place.
+        </p>
+      </header>
+
+      <div className="filters">
+        {["all", "scheduled", "busking_spot", "open_rehearsal"].map((tier) => (
+          <button
+            key={tier}
+            className={tierFilter === tier ? "filter-btn active" : "filter-btn"}
+            onClick={() => setTierFilter(tier)}
+          >
+            {tier === "all" ? "All" : TIER_LABELS[tier]}
+          </button>
+        ))}
+      </div>
+
+      {loading && <p className="status">Loading events…</p>}
+      {error && (
+        <p className="status error">
+          Couldn't reach the API — is the backend running? ({error})
+        </p>
+      )}
+      {!loading && !error && sorted.length === 0 && (
+        <p className="status">No events found for this filter.</p>
+      )}
+
+      <div className="event-list">
+        {sorted.map((event) => (
+          <EventCard key={event.id} event={event} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default App;
