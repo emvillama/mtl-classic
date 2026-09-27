@@ -48,6 +48,51 @@ body {
   border-color: #2c241a;
 }
 
+.source-filter {
+  position: relative;
+}
+
+.source-filter-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 10;
+  background: #fff;
+  border: 1px solid #e0dacd;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.source-reset {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: #2c5a7c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 0.3rem;
+  text-align: left;
+}
+
+.source-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.source-count {
+  color: #948b7c;
+  font-size: 0.78rem;
+}
+
 .status {
   color: #6b6258;
 }
