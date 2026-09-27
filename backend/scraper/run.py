@@ -20,11 +20,13 @@ from db import init_db, SessionLocal  # noqa: E402
 from models import Event  # noqa: E402
 from sources.osm import fetch_osm_events, SOURCE_NAME as OSM_SOURCE  # noqa: E402
 from sources.bourgie import fetch_bourgie_events, SOURCE_NAME as BOURGIE_SOURCE  # noqa: E402
+from sources.udem import fetch_udem_events, SOURCE_NAME as UDEM_SOURCE  # noqa: E402
 
 # Each entry: (source_name, fetch_function)
 SOURCES = [
     (OSM_SOURCE, fetch_osm_events),
     (BOURGIE_SOURCE, fetch_bourgie_events),
+    (UDEM_SOURCE, fetch_udem_events),
 ]
 
 
