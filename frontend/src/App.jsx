@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API_URL = "http://localhost:8000/api/events";
+const EVENTS_URL = "http://localhost:8000/api/events";
+const SOURCES_URL = "http://localhost:8000/api/sources";
 
 const TIER_LABELS = {
   scheduled: "Scheduled",
@@ -68,12 +69,33 @@ function EventCard({ event }) {
 
 function App() {
   const [events, setEvents] = useState([]);
+  const [sources, setSources] = useState([]); // [{id, label, count}]
+  const [activeSources, setActiveSources] = useState(null); // null = "all"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tierFilter, setTierFilter] = useState("all");
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+
+  // Load available sources once, up front, so the filter list doesn't
+  // shift around as the user toggles things.
+  useEffect(() => {
+    fetch(SOURCES_URL)
+      .then((res) => res.json())
+      .then((data) => setSources(data.sources ?? []))
+      .catch(() => {
+        // Non-fatal — the source filter panel just won't have options.
+      });
+  }, []);
 
   useEffect(() => {
-    fetch(API_URL)
+    const params = new URLSearchParams();
+    if (activeSources && activeSources.length > 0) {
+      params.set("source", activeSources.join(","));
+    }
+    const url = params.toString() ? `${EVENTS_URL}?${params}` : EVENTS_URL;
+
+    setLoading(true);
+    fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error(`API returned ${res.status}`);
         return res.json();
@@ -86,12 +108,31 @@ function App() {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [activeSources]);
+
+  function toggleSource(sourceId) {
+    setActiveSources((prev) => {
+      // prev === null means "all sources active" -> start from the full
+      // list so unchecking one actually narrows it down.
+      const base = prev === null ? sources.map((s) => s.id) : prev;
+      if (base.includes(sourceId)) {
+        return base.filter((id) => id !== sourceId);
+      }
+      return [...base, sourceId];
+    });
+  }
+
+  function isSourceActive(sourceId) {
+    return activeSources === null || activeSources.includes(sourceId);
+  }
+
+  function resetSources() {
+    setActiveSources(null);
+  }
 
   const filtered =
     tierFilter === "all" ? events : events.filter((e) => e.tier === tierFilter);
 
-  // Scheduled events sorted by date; busking spots (no date) trail at the end.
   const sorted = [...filtered].sort((a, b) => {
     if (!a.date && !b.date) return a.title.localeCompare(b.title);
     if (!a.date) return 1;
@@ -100,6 +141,9 @@ function App() {
       `${b.date}${b.start_time ?? ""}`
     );
   });
+
+  const activeSourceCount =
+    activeSources === null ? sources.length : activeSources.length;
 
   return (
     <div className="app">
@@ -121,6 +165,34 @@ function App() {
             {tier === "all" ? "All" : TIER_LABELS[tier]}
           </button>
         ))}
+
+        {sources.length > 0 && (
+          <div className="source-filter">
+            <button
+              className="filter-btn source-filter-toggle"
+              onClick={() => setSourcesOpen((open) => !open)}
+            >
+              Sources ({activeSourceCount}/{sources.length}) ▾
+            </button>
+            {sourcesOpen && (
+              <div className="source-filter-panel">
+                <button className="source-reset" onClick={resetSources}>
+                  Select all
+                </button>
+                {sources.map((s) => (
+                  <label key={s.id} className="source-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={isSourceActive(s.id)}
+                      onChange={() => toggleSource(s.id)}
+                    />
+                    {s.label} <span className="source-count">({s.count})</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {loading && <p className="status">Loading events…</p>}
