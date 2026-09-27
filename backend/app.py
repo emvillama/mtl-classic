@@ -22,6 +22,7 @@ SOURCE_LABELS = {
     "osm": "Orchestre symphonique de Montréal",
     "bourgie": "Salle Bourgie",
     "udem": "Université de Montréal — Faculté de musique",
+    "pda": "Place des Arts",
     "manual": "Known busking spots",
 }
 
