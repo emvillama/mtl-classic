@@ -23,6 +23,7 @@ SOURCE_LABELS = {
     "bourgie": "Salle Bourgie",
     "udem": "Université de Montréal — Faculté de musique",
     "pda": "Place des Arts",
+    "bach": "Festival Bach Montréal",
     "manual": "Known busking spots",
 }
 
