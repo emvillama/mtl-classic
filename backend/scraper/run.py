@@ -22,6 +22,7 @@ from sources.osm import fetch_osm_events, SOURCE_NAME as OSM_SOURCE  # noqa: E40
 from sources.bourgie import fetch_bourgie_events, SOURCE_NAME as BOURGIE_SOURCE  # noqa: E402
 from sources.udem import fetch_udem_events, SOURCE_NAME as UDEM_SOURCE  # noqa: E402
 from sources.pda import fetch_pda_events, SOURCE_NAME as PDA_SOURCE  # noqa: E402
+from sources.bach import fetch_bach_events, SOURCE_NAME as BACH_SOURCE  # noqa: E402
 
 # Each entry: (source_name, fetch_function)
 SOURCES = [
@@ -29,6 +30,7 @@ SOURCES = [
     (BOURGIE_SOURCE, fetch_bourgie_events),
     (UDEM_SOURCE, fetch_udem_events),
     (PDA_SOURCE, fetch_pda_events),
+    (BACH_SOURCE, fetch_bach_events),
 ]
 
 
