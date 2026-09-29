@@ -24,6 +24,7 @@ SOURCE_LABELS = {
     "udem": "Université de Montréal — Faculté de musique",
     "pda": "Place des Arts",
     "bach": "Festival Bach Montréal",
+    "jmc": "Jeunesses Musicales Canada",
     "manual": "Known busking spots",
 }
 
