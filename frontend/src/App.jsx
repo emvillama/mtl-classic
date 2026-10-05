@@ -27,6 +27,12 @@ function formatDate(event) {
   return `${dateStr} — ${timeStr}`;
 }
 
+function todayISO() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 function EventCard({ event }) {
   return (
     <div className={`event-card tier-${event.tier}`}>
@@ -75,6 +81,7 @@ function App() {
   const [error, setError] = useState(null);
   const [tierFilter, setTierFilter] = useState("all");
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [includePast, setIncludePast] = useState(false);
 
   // Load available sources once, up front, so the filter list doesn't
   // shift around as the user toggles things.
@@ -130,8 +137,11 @@ function App() {
     setActiveSources(null);
   }
 
-  const filtered =
-    tierFilter === "all" ? events : events.filter((e) => e.tier === tierFilter);
+  const today = todayISO();
+
+  const filtered = events
+    .filter((e) => tierFilter === "all" || e.tier === tierFilter)
+    .filter((e) => includePast || !e.date || e.date >= today);
 
   const sorted = [...filtered].sort((a, b) => {
     if (!a.date && !b.date) return a.title.localeCompare(b.title);
@@ -165,7 +175,12 @@ function App() {
             {tier === "all" ? "All" : TIER_LABELS[tier]}
           </button>
         ))}
-
+        <button
+          className={includePast ? "filter-btn active" : "filter-btn"}
+          onClick={() => setIncludePast((p) => !p)}
+        >
+          Include past
+        </button>
         {sources.length > 0 && (
           <div className="source-filter">
             <button
