@@ -16,6 +16,7 @@ class Event(Base):
     lat = Column(Float, nullable=True)
     lon = Column(Float, nullable=True)
     date = Column(String, nullable=True)        # ISO 8601
+    end_date = Column(String, nullable=True)
     start_time = Column(String, nullable=True)   # ISO 8601
     end_time = Column(String, nullable=True)
     price_type = Column(String, nullable=False)

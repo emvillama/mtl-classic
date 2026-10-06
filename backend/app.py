@@ -94,6 +94,7 @@ def row_to_dict(e: Event) -> dict:
         "lat": e.lat,
         "lon": e.lon,
         "date": e.date,
+        "end_date": e.end_date,
         "start_time": e.start_time,
         "end_time": e.end_time,
         "price_type": e.price_type,
